@@ -2,14 +2,12 @@
 
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
 type AuthFormProps = { mode: 'login' | 'register' };
 
 export function AuthForm({ mode }: AuthFormProps) {
-  const router = useRouter();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const isRegister = mode === 'register';
@@ -27,17 +25,20 @@ export function AuthForm({ mode }: AuthFormProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+      
       const result = await response.json();
+      
       if (!response.ok) {
         setError(result.error?.message ?? 'No fue posible completar la solicitud.');
         return;
       }
 
+      // Usamos window.location.href para forzar una recarga completa.
+      // Esto asegura que las cookies httpOnly se hayan guardado antes de ir a la ruta protegida.
       if (isRegister) {
-        router.push('/login?registered=1');
+        window.location.href = '/login?registered=1';
       } else {
-        router.push('/dashboard');
-        router.refresh();
+        window.location.href = '/dashboard';
       }
     } catch {
       setError('No pudimos conectarnos. Inténtalo de nuevo.');
