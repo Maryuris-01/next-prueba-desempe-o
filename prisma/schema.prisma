@@ -11,32 +11,105 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
 enum Role {
   USER
   ADMIN
 }
 
-model User {
-  id            String         @id @default(cuid())
-  email         String         @unique
-  name          String
-  passwordHash  String
-  role          Role           @default(USER)
-  createdAt     DateTime       @default(now())
-  refreshTokens RefreshToken[]
+enum SpaceStatus {
+  ACTIVE
+  INACTIVE
+}
 
-  @@map("users")
+enum ReservationStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+model User {
+  id String @id @default(cuid())
+
+  email String @unique
+
+  password String
+
+  name String?
+
+  role Role @default(USER)
+
+  createdAt DateTime @default(now())
+
+  reservations Reservation[]
+
+  refreshTokens RefreshToken[]
 }
 
 model RefreshToken {
-  id        String    @id @default(cuid())
-  tokenHash String    @unique
+  id String @id @default(cuid())
+
+  tokenHash String @unique
+
+  userId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   expiresAt DateTime
+
   revokedAt DateTime?
-  createdAt DateTime  @default(now())
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 
   @@index([userId])
-  @@map("refresh_tokens")
 }
+
+model Space {
+  id String @id @default(cuid())
+
+  name String @unique
+
+  description String
+
+  price Decimal @db.Decimal(10, 2)
+
+  image String?
+
+  status SpaceStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  reservations Reservation[]
+}
+
+model Reservation {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  spaceId String
+  space   Space  @relation(fields: [spaceId], references: [id])
+
+  startAt DateTime
+  endAt   DateTime
+  hours   Int
+
+  totalPrice Decimal @db.Decimal(10, 2)
+
+  status ReservationStatus @default(CONFIRMED)
+
+  createdAt   DateTime  @default(now())
+  cancelledAt DateTime?
+
+  @@index([spaceId, startAt])
+  @@index([userId, startAt])
+  @@index([spaceId, status, startAt, endAt])
+}
+
+/**
+ * Space (nombre, descripción, precio por hora, imagen, activo/inactivo)
+ * Reservation (usuario, espacio, fecha/hora de inicio, duración en horas, estado: confirmada/cancelada, precio total calculado por el servidor)
+ * Role como enum si usas Prisma.*
+ */

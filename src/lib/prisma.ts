@@ -1,10 +1,17 @@
-/*src/lib/
-├── prisma.ts          el cliente de la base (cuando Prisma esté listo)
-├── errors.ts          las clases de error: ApiError, ValidationError, etc.
-├── api.ts             el envoltorio de los handlers y el formato de respuesta de error
-├── utils.ts           funciones sueltas, como formatPrice
-└── auth/
-    ├── password.ts    hashear y comparar contraseñas
-    ├── tokens.ts      crear y verificar los tokens
-    ├── cookies.ts     poner y borrar las cookies
-    └── session.ts     leer la sesión en los handlers*/
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../generated/prisma/client';
+
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) throw new Error('DATABASE_URL no está definida');
+
+const adapter = new PrismaPg({ connectionString });
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter });
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma;
+}

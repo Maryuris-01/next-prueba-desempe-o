@@ -1,19 +1,17 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: "Next Template",
-  description: "Plantilla Next.js fullstack",
+  title: 'CoSpace — Reserva tu espacio de coworking',
+  description: 'Plataforma de reservas de espacios de coworking',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body className="min-h-screen bg-[#fbf7f3] text-[#493631] antialiased">
+        {children}
+      </body>
     </html>
   );
 }
