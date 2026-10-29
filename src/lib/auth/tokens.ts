@@ -1,42 +1,51 @@
 import { SignJWT, jwtVerify } from 'jose';
-import { createHash, randomBytes } from 'crypto';
+import crypto from 'crypto';
 
-const accessSecret = process.env.JWT_ACCESS_SECRET;
-if (!accessSecret) throw new Error('JWT_ACCESS_SECRET no está definida');
+// Clave secreta leyendo exactamente tu variable de entorno
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_ACCESS_SECRET || 'tu_secreto_super_seguro_cambialo_en_produccion'
+);
 
-const accessSecretKey = new TextEncoder().encode(accessSecret);
-const accessExpiresIn = process.env.ACCESS_TOKEN_EXPIRES_IN ?? '15m';
-
+// Tipo de los datos que viajan dentro del Access Token
 export type AccessTokenPayload = {
   userId: string;
   role: 'USER' | 'ADMIN';
+  name?: string | null;
 };
 
+/**
+ * Genera y firma un nuevo Access Token (JWT) de corta duración.
+ */
 export async function signAccessToken(payload: AccessTokenPayload): Promise<string> {
-  return new SignJWT({ role: payload.role })
+  return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
-    .setSubject(payload.userId)
     .setIssuedAt()
-    .setExpirationTime(accessExpiresIn)
-    .sign(accessSecretKey);
+    .setExpirationTime('15m')
+    .sign(JWT_SECRET);
 }
 
+/**
+ * Verifica y decodifica un Access Token. Retorna el payload si es válido, o null si falla.
+ */
 export async function verifyAccessToken(token: string): Promise<AccessTokenPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, accessSecretKey);
-    const userId = payload.sub;
-    const role = payload.role;
-    if (typeof userId !== 'string' || (role !== 'USER' && role !== 'ADMIN')) return null;
-    return { userId, role };
-  } catch {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return payload as AccessTokenPayload;
+  } catch (error) {
     return null;
   }
 }
 
+/**
+ * Genera un string aleatorio y seguro para usar como Refresh Token.
+ */
 export function generateRefreshToken(): string {
-  return randomBytes(32).toString('hex');
+  return crypto.randomBytes(64).toString('hex');
 }
 
-export function hashRefreshToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex');
+/**
+ * Aplica un hash SHA-256 al Refresh Token antes de guardarlo en la base de datos.
+ */
+export function hashRefreshToken(refreshToken: string): string {
+  return crypto.createHash('sha256').update(refreshToken).digest('hex');
 }

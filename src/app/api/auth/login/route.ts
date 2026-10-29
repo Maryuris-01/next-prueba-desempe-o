@@ -23,7 +23,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   const valid = await verifyPassword(password, user.password);
   if (!valid) throw new UnauthorizedError('Credenciales inválidas.');
 
-  const accessToken = await signAccessToken({ userId: user.id, role: user.role });
+  const accessToken = await signAccessToken({ userId: user.id, role: user.role, name: user.name ?? 'Usuario' });
 
   const refreshToken = generateRefreshToken();
   const tokenHash = hashRefreshToken(refreshToken);
