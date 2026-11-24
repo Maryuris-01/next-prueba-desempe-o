@@ -20,9 +20,9 @@ export default async function PrivateLayout({ children }: { children: React.Reac
           <Link href="/" className="text-xl font-bold text-[#8e514b]">
             CoSpace
           </Link>
-          <UserMenu name={session.userId.slice(0, 8)} role={session.role} />
+          <UserMenu name={session.name ?? 'Usuario'} role={session.role} />
         </nav>
-      </header>
+       </header>
       <main className="flex-1 bg-[#fbf7f3]">{children}</main>
     </div>
   );

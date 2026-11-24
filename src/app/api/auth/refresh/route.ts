@@ -39,6 +39,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   const accessToken = await signAccessToken({
     userId: stored.user.id,
     role: stored.user.role,
+    name: stored.user.name
   });
 
   const res = jsonOk({ ok: true });
